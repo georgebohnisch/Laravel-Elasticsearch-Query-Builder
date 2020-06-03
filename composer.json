@@ -1,5 +1,5 @@
 {
-    "name": "shisun/laravel-elasticsearch-query-builder",
+    "name": "georgebohnisch/laravel-elasticsearch-query-builder",
     "description": ":Query Elasticsearch by using Eloquent",
     "license": "GPL-3.0-only",
     "authors": [
