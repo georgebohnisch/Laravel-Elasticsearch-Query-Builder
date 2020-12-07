@@ -1,10 +1,15 @@
 <?php
 
 namespace Shisun\LaravelElasticsearchQueryBuilder;
+
 use Elasticsearch\ClientBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class LaravelElasticsearchQueryBuilder {
 
@@ -30,7 +35,7 @@ class LaravelElasticsearchQueryBuilder {
 	private $with = [];
 	private $with_out = [];
 	private $prepended_path = false;
-	private $model;
+	protected $model;
 	private $query;
 	private $body;
 	private $min_score;
@@ -1111,19 +1116,56 @@ class LaravelElasticsearchQueryBuilder {
 		return $items;
 	}
 
-	/**
-	 * @return Model|static
-	 */
-	public function toEloquent() {
-		if( ! is_array($this->raw_results)) {
-			return collect([]);
-		}
-		$models = [];
-		foreach($this->toArray() as $model) {
-			$models[] = $this->model->newFromBuilder($model);
-		}
-		return collect($models);
-	}
+    /**
+     * @return Collection|Model
+     */
+    public function toEloquent(): Collection
+    {
+        $models = collect();
+        if( ! is_array($this->raw_results)) {
+            return $models;
+        }
+
+        foreach($this->toArray() as $modelData) {
+            $relationships = [];
+            foreach ($modelData as $relationName => $relationData) {
+                if (is_array($relationData)) {
+                    $relationships[$relationName] = $relationData;
+                    unset($modelData[$relationName]);
+                }
+            }
+            $model = $this->model->newFromBuilder($modelData);
+
+            foreach ($relationships as $relationName => $relationData) {
+                if (method_exists($model, $relationName)) {
+                    /** @var Relation $relation */
+                    $relation = $model->{$relationName}();
+                    $relatedModelClass = $relation->getRelated()->getMorphClass();
+                    $relatedModel = new $relatedModelClass();
+                    switch (true) {
+                        case (is_a($relation, BelongsToMany::class, true)):
+                        case (is_a($relation, HasMany::class, true)):
+                            $subModels = collect();
+                            foreach ($relationData as $subModelData) {
+                                $subModels->push($relatedModel->newFromBuilder($subModelData));
+                            }
+                            $relatedModel = $subModels;
+                            break;
+                        default:
+                            $relatedModel = $relatedModel->newFromBuilder($relationData);
+                            break;
+                    }
+
+
+                    $model->setRelation($relationName, $relatedModel);
+                }
+
+            }
+
+            $models->push($model);
+        }
+        return $models;
+    }
 
 
 	/**
