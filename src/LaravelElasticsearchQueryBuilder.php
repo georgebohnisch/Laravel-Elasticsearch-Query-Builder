@@ -6,10 +6,10 @@ use Elasticsearch\ClientBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Collection;
 
 class LaravelElasticsearchQueryBuilder {
 
@@ -1121,7 +1121,7 @@ class LaravelElasticsearchQueryBuilder {
      */
     public function toEloquent(): Collection
     {
-        $models = collect();
+        $models = new Collection();
         if( ! is_array($this->raw_results)) {
             return $models;
         }
