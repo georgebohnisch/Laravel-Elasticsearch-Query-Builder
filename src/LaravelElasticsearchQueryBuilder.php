@@ -795,12 +795,15 @@ class LaravelElasticsearchQueryBuilder {
     {
         $this->scroll_alive = $scroll_alive;
         $this->scroll_size = $scroll_size;
-        $scroll_id = $this->get()->rawResults()['_scroll_id'];
-        $results = $this->get()->toArray();
-        if($json) {
+
+        $this->get();
+        $scroll_id = $this->rawResults()['_scroll_id'];
+        $results = $this->toArray();
+
+        if ($json) {
             $results = [json_encode($results)];
         }
-        while(true) {
+        while (true) {
             $response = $this->es_client->scroll([
                     'scroll_id' => $scroll_id,
                     'scroll' => $scroll_alive
