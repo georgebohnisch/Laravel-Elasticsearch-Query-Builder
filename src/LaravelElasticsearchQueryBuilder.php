@@ -784,6 +784,7 @@ class LaravelElasticsearchQueryBuilder {
         $this->raw_results = $this->es_client->search($params);
         return $this;
     }
+
     public function scroll($scroll_alive = '5m', $scroll_size = 500, $json = false): self
     {
         $this->scroll_alive = $scroll_alive;
