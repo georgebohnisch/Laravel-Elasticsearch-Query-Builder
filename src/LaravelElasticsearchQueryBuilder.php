@@ -777,42 +777,48 @@ class LaravelElasticsearchQueryBuilder {
 	/**
 	 * @return $this
 	 */
-	public function get() {
-		$this->query = $this->array_remove_empty($this->query, 1);
-		$params = $this->constructParams();
-		$this->raw_results = $this->es_client->search($params);
-		return $this;
-	}
-
-	public function scroll($scroll_alive = '5m', $scroll_size = 500, $json = false) {
-		$this->scroll_alive = $scroll_alive;
-		$this->scroll_size = $scroll_size;
-		$scroll_id = $this->get()->rawResults()['_scroll_id'];
-		$results = $this->get()->toArray();
-		if($json) {
-			$results = [json_encode($results)];
-		}
-		while(true) {
-			$response = $this->es_client->scroll([
-					'scroll_id' => $scroll_id,
-					'scroll' => $scroll_alive
-				]
-			);
-			if (count($response['hits']['hits']) > 0) {
-				if($json) {
-					$results[] = json_encode(array_column($response['hits']['hits'], '_source'));
-				} else {
-					array_map(function ($value) use (&$results) {
-						$results[] = $value['_source'];
-					}, $response['hits']['hits']);
-				}
-				$scroll_id = $response['_scroll_id'];
-			} else {
-				break;
-			}
-		}
-		return $results;
-	}
+	public function get(): self
+    {
+        $this->query = $this->array_remove_empty($this->query, 1);
+        $params = $this->constructParams();
+        $this->raw_results = $this->es_client->search($params);
+        return $this;
+    }
+    public function scroll($scroll_alive = '5m', $scroll_size = 500, $json = false): self
+    {
+        $this->scroll_alive = $scroll_alive;
+        $this->scroll_size = $scroll_size;
+        $scroll_id = $this->get()->rawResults()['_scroll_id'];
+        $results = $this->get()->toArray();
+        if($json) {
+            $results = [json_encode($results)];
+        }
+        while(true) {
+            $response = $this->es_client->scroll([
+                    'scroll_id' => $scroll_id,
+                    'scroll' => $scroll_alive
+                ]
+            );
+            if (count($response['hits']['hits']) > 0) {
+                if($json) {
+                    $results[] = json_encode(array_column($response['hits']['hits'], '_source'));
+                } else {
+                    array_map(function ($value) use (&$results) {
+                        $results[] = $value['_source'];
+                    }, $response['hits']['hits']);
+                }
+                $scroll_id = $response['_scroll_id'];
+            } else {
+                break;
+            }
+        }
+        $this->rawResults()['hits']['hits'] = [];
+        foreach ($results as $index => $item) {
+            unset($item['_score']);
+            $this->rawResults()['hits'][$index]['_source'] = $item;
+        }
+        return $this;
+    }
 
 	/**
 	 * @param bool $return_eloquent
