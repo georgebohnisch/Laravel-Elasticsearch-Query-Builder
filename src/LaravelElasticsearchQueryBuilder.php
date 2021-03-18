@@ -774,10 +774,10 @@ class LaravelElasticsearchQueryBuilder {
 		return $this;
 	}
 
-	/**
-	 * @return $this
-	 */
-	public function get(): self
+    /**
+     * @return $this
+     */
+	public function get()
     {
         $this->query = $this->array_remove_empty($this->query, 1);
         $params = $this->constructParams();
@@ -785,7 +785,13 @@ class LaravelElasticsearchQueryBuilder {
         return $this;
     }
 
-    public function scroll($scroll_alive = '5m', $scroll_size = 500, $json = false): self
+    /**
+     * @param string $scroll_alive
+     * @param int $scroll_size
+     * @param bool $json
+     * @return $this
+     */
+    public function scroll($scroll_alive = '5m', $scroll_size = 500, $json = false)
     {
         $this->scroll_alive = $scroll_alive;
         $this->scroll_size = $scroll_size;
