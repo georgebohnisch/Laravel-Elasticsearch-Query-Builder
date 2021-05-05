@@ -16,7 +16,7 @@
   ],
   "require": {
     "illuminate/database": "~7.0|~8.0",
-    "elasticsearch/elasticsearch": "^6.0.1",
+    "elasticsearch/elasticsearch": "~6.0|~7.0",
     "ext-json": "*"
   },
   "autoload": {
